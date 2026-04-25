@@ -1,4 +1,4 @@
-# 🤝 [UnityAid AI: Smart Volunteer Coordination Platform](https://unity-aid-3sph6xrxi-mohd-ubess-projects.vercel.app)
+# 🤝 [UnityAid AI: Smart Volunteer Coordination Platform](https://unityaid-ai-319563874407.us-central1.run.app)
 
 UnityAid AI is a premium, AI-powered community coordination platform designed to empower volunteers and NGOs across India with intelligent planning tools, real-time AI assistance, and seamless resource management.
 
@@ -70,4 +70,4 @@ UnityAid AI bridges this critical gap by providing every volunteer and NGO with 
 ---
 
 ## 🔗 Live Demo
-[🌐 Visit UnityAid AI Live](https://unity-aid-3sph6xrxi-mohd-ubess-projects.vercel.app)
+[🌐 Visit UnityAid AI Live](https://unityaid-ai-319563874407.us-central1.run.app)
