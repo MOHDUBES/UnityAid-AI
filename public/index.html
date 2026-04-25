@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnityAid AI - Smart Volunteer Coordination</title>
+    <meta name="description" content="A context-aware AI assistant powered by Gemini.">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="logo.png">
+    <style>
+        /* Pro Login Gate Styling */
+        .login-gate {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100dvh;
+            background: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .login-gate.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            display: none !important;
+        }
+
+        .login-card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            width: 100%;
+            max-width: 440px;
+            padding: 48px 40px;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            text-align: center;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8);
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: scale(0.9) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .login-logo {
+            width: 80px; height: 80px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .login-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(to bottom, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-subtitle {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            margin-bottom: 35px;
+        }
+
+        .social-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .social-gate-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .social-gate-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .login-divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: #475569;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .login-divider::before, .login-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .login-divider span { padding: 0 12px; }
+
+        .gate-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .gate-input {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 15px 18px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .gate-input:focus { border-color: var(--primary-color); }
+
+        .gate-submit-btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .gate-submit-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.5);
+        }
+
+        .app-container.blur-hidden {
+            filter: blur(20px);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            display: none !important;
+        }
+
+        .app-container {
+            transition: all 0.8s ease;
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+    </style>
+</head>
+
+<body class="dark-mode">
+    <!-- Pro Login Gate -->
+    <div id="login-gate" class="login-gate">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="logo.png" alt="UnityAid Logo" class="login-logo">
+                <h1 class="login-title" id="gate-title">UnityAid AI</h1>
+                <p class="login-subtitle" id="gate-subtitle">Securing community coordination.</p>
+            </div>
+            
+            <div id="social-auth-section">
+                <div class="social-btn-group">
+                    <button type="button" class="social-gate-btn google-gate-btn" onclick="window.simulateGateSocial('google')">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+                        Google
+                    </button>
+                    <button type="button" class="social-gate-btn apple-gate-btn" onclick="window.simulateGateSocial('apple')">
+                        <i class="fab fa-apple"></i> Apple
+                    </button>
+                </div>
+                <div class="login-divider"><span>OR CONTINUE WITH EMAIL</span></div>
+            </div>
+            
+            <div class="gate-input-group">
+                <input type="text" id="gate-name" placeholder="Your Name" class="gate-input">
+                <input type="email" id="gate-email" placeholder="Email Address" class="gate-input">
+                <input type="password" id="gate-password" placeholder="Password" class="gate-input">
+                <button type="button" id="gate-login-btn" class="gate-submit-btn" onclick="window.handleGateAction()">Unlock Application</button>
+            </div>
+
+            <div class="gate-footer" style="margin-top: 25px; font-size: 0.95rem; color: #64748b;">
+                <span id="gate-footer-text">Don't have an account?</span>
+                <a href="javascript:void(0)" id="gate-toggle-link" onclick="window.toggleGateMode()" style="color: var(--primary-color); text-decoration: none; font-weight: 600; margin-left: 5px;">Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .hidden { display: none !important; }
+    </style>
+
+    <div class="app-container blur-hidden" id="main-app">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-hand-holding-heart"></i> UnityAid</h2>
+                <button id="close-sidebar-btn" class="icon-btn mobile-only" onclick="toggleMobileMenu(event)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <button id="new-chat-btn" style="margin: 1rem; padding: 0.8rem; background: var(--primary-color); border: none; border-radius: 8px; color: white; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; font-family: inherit; width: calc(100% - 2rem); transition: opacity 0.2s;">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
+
+            <div class="suggestions-container">
+                <h3>Quick Tasks</h3>
+                <button class="suggestion-btn" onclick="triggerQuickTask('Organize a food drive')"><i class="fas fa-utensils"></i> Organize Food Drive</button>
+                <button class="suggestion-btn" onclick="triggerQuickTask('Find blood donors nearby')"><i class="fas fa-tint"></i> Find Blood Donors</button>
+                <button class="suggestion-btn" onclick="triggerQuickTask('Coordinate weekend teaching')"><i class="fas fa-graduation-cap"></i> Weekend Teaching</button>
+                <button class="suggestion-btn" onclick="triggerQuickTask('Plan emergency response')"><i class="fas fa-ambulance"></i> Emergency Response</button>
+            </div>
+
+            <div class="history-container">
+                <h3>Recent Chats</h3>
+                <ul id="chat-history-list">
+                    <!-- History injected here -->
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile" id="user-profile-card">
+                    <div class="user-info">
+                        <div class="user-avatar">U</div>
+                        <div class="user-details">
+                            <span class="user-name">Guest User</span>
+                            <span class="user-status">Community Member</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileMenu(event)"></div>
+
+        <!-- Main Chat Area -->
+        <main class="chat-main">
+            <header class="chat-header">
+                <div class="header-left">
+                    <button id="mobile-menu-btn" class="icon-btn mobile-only" onclick="toggleMobileMenu(event)">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-title">
+                        <h1><i class="fas fa-hand-holding-heart" style="color: var(--primary-color); margin-right: 10px;"></i> UnityAid AI</h1>
+                        <span class="status-indicator"></span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="pdf-dropdown">
+                        <button class="pdf-btn" id="pdf-trigger" onclick="togglePdfMenu(event)">
+                            <i class="fas fa-file-pdf"></i> <span>Save as PDF</span> <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="pdf-menu" id="pdf-menu">
+                            <div class="pdf-section">
+                                <div class="pdf-item green-item" onclick="saveChatAsPDF('messages')"><i class="fas fa-magic"></i> Save Messages Only</div>
+                                <div class="pdf-item green-item" onclick="saveChatAsPDF('choose')"><i class="fas fa-check-circle"></i> Choose Messages for PDF</div>
+                            </div>
+                            
+                            <div class="settings-group" style="padding: 10px;">
+                                <div class="setting-item">
+                                    <span><i class="fas fa-moon"></i> PDF Theme</span>
+                                    <div class="theme-switch-container">
+                                        <label class="switch">
+                                            <input type="checkbox" id="pdf-theme-check">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <span><i class="fas fa-book-open"></i> Font</span>
+                                    <select id="font-select" class="settings-select">
+                                        <option value="'Inter', sans-serif">Default</option>
+                                        <option value="'Times New Roman', serif">Times New Roman</option>
+                                        <option value="Arial, sans-serif">Arial</option>
+                                        <option value="'Calibri', sans-serif">Calibri</option>
+                                        <option value="Helvetica, sans-serif">Helvetica</option>
+                                    </select>
+                                </div>
+
+                                <div class="setting-item">
+                                    <span><i class="fas fa-list"></i> Font Size</span>
+                                    <select id="font-size-select" class="settings-select">
+                                        <option value="0.85rem">Small</option>
+                                        <option value="1rem">Normal</option>
+                                        <option value="1.2rem">Large</option>
+                                        <option value="1.4rem">Extra Large</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="settings-footer-links" style="padding: 10px; border-top: 1px solid #444;">
+                                <a href="#">Need Help?</a>
+                                <a href="#">Report an Issue</a>
+                            </div>
+
+                            <div style="padding: 0 10px 10px;">
+                                <button class="rate-us-btn" style="margin-top: 5px;">Rate Us <i class="fas fa-star"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="header-action-btn" id="share-btn">
+                        <i class="fas fa-share-alt"></i> Share
+                    </button>
+                    <button class="icon-btn" id="settings-btn" title="More Options">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div id="chat-box" class="chat-box">
+                <!-- Welcome Message Empty State -->
+                <div class="welcome-screen" id="welcome-screen">
+                    <div class="welcome-icon-container">
+                        <i class="fas fa-hand-holding-heart welcome-icon"></i>
+                    </div>
+                    <h2>UnityAid at your service</h2>
+                    <p></p>
+                </div>
+
+                <div id="messages">
+                    <div class="mobile-spacer"></div>
+                </div>
+
+                <div class="typing-container hidden" id="typing-container">
+                    <i class="fas fa-robot bot-avatar-small"></i>
+                    <div id="typing-indicator" class="typing-indicator">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="camera-modal" class="hidden" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center;">
+                <h3 style="color:white; margin-bottom: 1rem;"><i class="fas fa-camera"></i> Camera Preview</h3>
+                <video id="camera-preview" autoplay playsinline style="border-radius: 12px; width: 90%; max-width: 600px; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></video>
+                <div style="margin-top: 1.5rem; display:flex; gap: 1rem;">
+                     <button type="button" id="capture-pic-btn" style="background: var(--primary-gradient); border:none; border-radius:8px; color:white; padding: 0.8rem 1.5rem; font-weight:600; font-family:inherit; cursor:pointer;"><i class="fas fa-image"></i> Take Photo</button>
+                     <button type="button" id="close-camera-btn" style="background:#ef4444; border:none; border-radius:8px; color:white; padding: 0.8rem 1.5rem; font-weight:600; font-family:inherit; cursor:pointer;"><i class="fas fa-times"></i> Close</button>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <form id="chat-form" class="pill-input-form">
+                    <div class="input-left-actions">
+                        <button type="button" id="plus-btn" class="icon-btn action-plus" title="More options">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <!-- Premium secondary actions menu -->
+                        <div id="plus-menu" class="hidden-menu premium-plus-menu">
+                            <div class="plus-menu-item" id="search-web-btn">
+                                <i class="fas fa-search"></i>
+                                <span>Search with Google</span>
+                            </div>
+                            <div class="plus-menu-item" id="camera-input-btn">
+                                <i class="fas fa-camera"></i>
+                                <span>Analyze Image</span>
+                            </div>
+                            <div class="plus-menu-item" id="file-upload-btn">
+                                <i class="fas fa-paperclip"></i>
+                                <span>Upload Documents</span>
+                            </div>
+                            <div class="plus-menu-sep"></div>
+                            <div class="plus-menu-item">
+                                <i class="fas fa-brain"></i>
+                                <span>Advanced Analysis</span>
+                            </div>
+                            <input type="file" id="file-upload-input" style="display:none;" />
+                        </div>
+                    </div>
+
+                    <input type="text" id="user-input" placeholder="Ask anything" autocomplete="off">
+
+                    <div class="input-right-actions">
+                        <button type="button" id="voice-input-btn" class="icon-btn voice-btn" title="Voice Input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button type="submit" id="send-btn" class="gemini-send-btn">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden Chat Context Menu -->
+    <div id="chat-context-menu" class="chat-context-menu">
+        <div class="menu-item"><i class="fas fa-share"></i> Share</div>
+        <div class="menu-item"><i class="fas fa-user-plus"></i> Start group chat</div>
+        <div class="menu-item" id="rename-chat-opt"><i class="fas fa-edit"></i> Rename</div>
+        <div class="menu-item has-submenu" id="move-to-proj-opt">
+            <i class="fas fa-folder"></i> Move to project <i class="fas fa-chevron-right" style="margin-left: auto;"></i>
+            <div class="submenu">
+                <div class="menu-item"><i class="fas fa-plus"></i> New project</div>
+                <div class="menu-sep"></div>
+                <div class="menu-item"><i class="fas fa-graduation-cap"></i> CM notes</div>
+                <div class="menu-item"><i class="fas fa-graduation-cap"></i> CM notes</div>
+                <div class="menu-item"><i class="fas fa-graduation-cap"></i> CM notes</div>
+            </div>
+        </div>
+        <div class="menu-sep"></div>
+        <div class="menu-item"><i class="fas fa-thumbtack"></i> Pin chat</div>
+        <div class="menu-item"><i class="fas fa-archive"></i> Archive</div>
+        <div class="menu-item danger" id="delete-chat-opt"><i class="fas fa-trash"></i> Delete</div>
+    </div>
+
+
+
+    <!-- Sidebar Profile Menu -->
+    <div id="profile-menu" class="pdf-menu profile-menu shadow-lg">
+        <div class="menu-item" id="add-account-btn"><i class="fas fa-plus"></i> Add another account</div>
+        <div class="menu-sep"></div>
+        <div class="menu-item" id="theme-toggle-menu"><i class="fas fa-sun"></i> Light Mode</div>
+        <div class="menu-item danger" id="clear-history-menu"><i class="fas fa-trash-alt"></i> Clear All Chats</div>
+        <div class="menu-sep"></div>
+        <div class="menu-item" id="upgrade-plan-btn"><i class="fas fa-star"></i> Upgrade plan</div>
+        <div class="menu-item" id="personalization-btn"><i class="fas fa-palette"></i> Personalization</div>
+        <div class="menu-item" id="profile-btn"><i class="fas fa-user-circle"></i> Profile</div>
+        <div class="menu-item" id="settings-profile-btn"><i class="fas fa-cog"></i> Settings</div>
+        <div class="menu-sep"></div>
+        <div class="menu-item has-submenu" id="help-btn">
+            <i class="fas fa-question-circle"></i> Help <i class="fas fa-chevron-right" style="margin-left: auto; font-size: 0.7rem;"></i>
+            <div class="submenu right-submenu">
+                <div class="menu-item"><i class="fas fa-life-ring"></i> Help center</div>
+                <div class="menu-item"><i class="fas fa-edit"></i> Release notes</div>
+                <div class="menu-item"><i class="fas fa-file-contract"></i> Terms & policies</div>
+                <div class="menu-item"><i class="fas fa-bug"></i> Report a bug</div>
+                <div class="menu-item"><i class="fas fa-download"></i> Download apps</div>
+                <div class="menu-item"><i class="fas fa-keyboard"></i> Keyboard shortcuts</div>
+            </div>
+        </div>
+        <div class="menu-item" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Log out</div>
+    </div>
+
+    <!-- Header More Options Menu -->
+    <div id="header-more-menu" class="pdf-menu header-menu shadow-lg">
+        <div class="menu-item"><i class="fas fa-user-plus"></i> Start a group chat</div>
+        <div class="menu-item has-submenu">
+            <i class="fas fa-folder"></i> Move to project <i class="fas fa-chevron-right" style="margin-left: auto; font-size: 0.7rem;"></i>
+            <div class="submenu left-submenu">
+                <div class="menu-item"><i class="fas fa-plus-square"></i> New project</div>
+                <div class="menu-sep"></div>
+                <div class="menu-item"><i class="fas fa-graduation-cap" style="color: #4da3ff;"></i> CM notes</div>
+                <div class="menu-item"><i class="fas fa-graduation-cap" style="color: #4da3ff;"></i> CM notes</div>
+                <div class="menu-item"><i class="fas fa-graduation-cap" style="color: #4da3ff;"></i> CM notes</div>
+            </div>
+        </div>
+        <div class="menu-item"><i class="fas fa-thumbtack"></i> Pin chat</div>
+        <div class="menu-item"><i class="fas fa-archive"></i> Archive</div>
+        <div class="menu-sep"></div>
+        <div class="menu-item danger"><i class="fas fa-trash"></i> Delete</div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="auth-card shadow-2xl">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <img src="logo.png" alt="UnityAid Logo" style="height: 60px; width: 60px; border-radius: 12px; margin: 0 auto;">
+            </div>
+            <button class="close-modal" id="close-auth">&times;</button>
+            <h2 class="auth-title" id="auth-title">Log in or sign up</h2>
+            <p class="auth-subtitle" id="auth-subtitle">Join UnityAid to coordinate social impact events and track your contributions.</p>
+            
+            <div class="auth-options">
+                <button class="social-btn google-btn"><i class="fab fa-google" style="color: #4285F4;"></i> Continue with Google</button>
+                <button class="social-btn apple-btn"><i class="fab fa-apple"></i> Continue with Apple</button>
+                <button class="social-btn phone-btn"><i class="fas fa-phone-alt" style="color: #10b981;"></i> Continue with phone</button>
+            </div>
+            
+            <div class="auth-divider"><span>OR</span></div>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="auth-form-container">
+                <input type="email" placeholder="Email address" class="auth-input login-email">
+                <button class="primary-btn auth-continue login-submit">Continue</button>
+            </div>
+
+            <!-- Sign Up Form (Hidden by default) -->
+            <div id="signup-form" class="auth-form-container hidden">
+                <input type="text" placeholder="Full Name" class="auth-input signup-name">
+                <input type="email" placeholder="Email address" class="auth-input signup-email">
+                <input type="password" placeholder="Create Password" class="auth-input signup-pass">
+                <button class="primary-btn auth-continue signup-submit">Create Account</button>
+            </div>
+
+            <p class="auth-footer-text" style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                <span id="toggle-msg">Don't have an account?</span> 
+                <a href="#" id="auth-toggle" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Sign up</a>
+                <br><br>
+                <a href="#" id="guest-login" style="color: var(--text-secondary); text-decoration: underline; font-size: 0.8rem;">Continue as Guest</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Advanced Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="settings-card shadow-2xl">
+            <aside class="settings-sidebar">
+                <button class="close-settings" id="close-settings-btn">&times;</button>
+                <div class="settings-nav-item active"><i class="fas fa-cog"></i> General</div>
+                <div class="settings-nav-item"><i class="fas fa-bell"></i> Notifications</div>
+                <div class="settings-nav-item"><i class="fas fa-magic"></i> Personalization</div>
+                <div class="settings-nav-item"><i class="fas fa-th-large"></i> Apps</div>
+                <div class="settings-nav-item"><i class="fas fa-database"></i> Data controls</div>
+                <div class="settings-nav-item"><i class="fas fa-shield-alt"></i> Security</div>
+                <div class="settings-nav-item"><i class="fas fa-user-shield"></i> Parental controls</div>
+                <div class="settings-nav-item"><i class="fas fa-user-circle"></i> Account</div>
+            </aside>
+            <main class="settings-main">
+                <header class="settings-header"><h2>General</h2></header>
+                <div class="settings-content">
+                    <div class="settings-row">
+                        <div class="row-info"><span class="row-label">Appearance</span></div>
+                        <div class="row-action">
+                            <select class="settings-select">
+                                <option>Dark</option><option>Light</option><option>System</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="row-info"><span class="row-label">Contrast</span></div>
+                        <div class="row-action"><select class="settings-select"><option>System</option></select></div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="row-info"><span class="row-label">Accent color</span></div>
+                        <div class="row-action">
+                            <span class="color-dot"></span> <select class="settings-select"><option>Default</option></select>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="row-info"><span class="row-label">Language</span></div>
+                        <div class="row-action"><select class="settings-select"><option>Auto-detect</option></select></div>
+                    </div>
+                    <div class="settings-row block-row">
+                        <div class="row-info">
+                            <span class="row-label">Spoken language</span>
+                            <p class="row-desc">For best results, select the language you mainly speak.</p>
+                        </div>
+                        <div class="row-action"><select class="settings-select"><option>Auto-detect</option></select></div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="row-info"><span class="row-label">Voice</span></div>
+                        <div class="row-action">
+                            <button class="voice-play-btn"><i class="fas fa-play"></i> Play</button>
+                            <select class="settings-select"><option>Spruce</option></select>
+                        </div>
+                    </div>
+                    <div class="settings-row block-row">
+                        <div class="row-info">
+                            <span class="row-label">Separate Voice</span>
+                            <p class="row-desc">Keep ChatGPT Voice in a separate full screen.</p>
+                        </div>
+                        <div class="row-action">
+                            <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
